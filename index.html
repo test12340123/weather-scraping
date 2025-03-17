@@ -69,6 +69,12 @@
         h1 {
             color: white;
             font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .city-name {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 20px;
             margin-bottom: 20px;
         }
 
@@ -153,8 +159,8 @@
     <div class="weather-container">
         <div class="weather-header">
             <h1>Weather Dashboard</h1>
-            <input type="text" class="location-input" id="location" placeholder="Enter city name (e.g., Winnipeg)" value="Winnipeg">
-            <button id="refreshButton" onclick="fetchWeather()">Get Weather Data</button>
+            <div class="city-name">Winnipeg, Manitoba</div>
+            <button id="refreshButton" onclick="fetchWeather()">Refresh Weather</button>
         </div>
         <div class="weather-grid">
             <div class="weather-item">
@@ -174,16 +180,18 @@
                 <p id="status">--</p>
             </div>
         </div>
+        <div id="weatherSource" style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.6);">
+            Data from Weather Underground
+        </div>
         <p id="errorMessage" class="error-message"></p>
     </div>
 
     <script>
         async function fetchWeather() {
-            const location = document.getElementById('location').value;
             const errorMessage = document.getElementById('errorMessage');
             
             try {
-                const response = await fetch(`http://localhost:3000/api/weather?city=${encodeURIComponent(location)}`);
+                const response = await fetch('http://localhost:3000/api/weather');
                 if (!response.ok) {
                     throw new Error('Failed to fetch weather data');
                 }
