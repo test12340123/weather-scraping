@@ -4,31 +4,45 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const app = express();
 
+// Add CORS middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 app.get("/api/weather", async (req, res) => {
   try {
-    const url = "https://www.wunderground.com/weather/ca/downtown-winnipeg/49.90,-97.14";
-    const { data } = await axios.get(url);
+    const city = req.query.city || 'downtown-winnipeg';
+    const url = `https://www.wunderground.com/weather/ca/${city}/49.90,-97.14`;
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
     const $ = cheerio.load(data);
     
-    const weatherBlock = $(".region-content-main div:nth-of-type(1) div.has-sidebar").text().trim();
-    
-    // Parse the weather string
-    const tempMatch = weatherBlock.match(/(\d+)°/);
-    const windMatch = weatherBlock.match(/(\d+)\s*Gusts\s*(\d+)/);
-    const conditionMatch = weatherBlock.match(/(\w+)N\d/); // Matches condition before wind direction
+    const temperature = $('.current-temp').first().text().trim();
+    const condition = $('.condition-icon').first().text().trim();
+    const windSpeed = $('.wind-speed').first().text().trim();
     
     const weatherData = {
-      temperature: tempMatch ? tempMatch[1] : "--",
-      humidity: "N/A", // Weather Underground doesn't provide humidity in this block
-      windSpeed: windMatch ? windMatch[2] : "--",
-      pressure: "N/A", // Weather Underground doesn't provide pressure in this block
-      condition: conditionMatch ? conditionMatch[1] : "Unknown"
+      temperature: temperature ? temperature.replace(/[^0-9]/g, '') : "--",
+      windSpeed: windSpeed ? windSpeed.match(/\d+/)?.[0] : "--",
+      condition: condition || "Unknown"
     };
     
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch weather data" });
+    console.error('Weather API Error:', error.message);
+    res.status(500).json({ error: "Failed to fetch weather data. Please try again later." });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
