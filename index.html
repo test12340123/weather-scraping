@@ -189,11 +189,21 @@
     <script>
         async function fetchWeather() {
             const errorMessage = document.getElementById('errorMessage');
+            const API_URL = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api/weather'
+                : 'https://weather-scraping-alpha.vercel.app/api/weather'; // Replace with your actual deployed API URL
             
             try {
-                const response = await fetch('http://localhost:3000/api/weather');
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
                 if (!response.ok) {
-                    throw new Error('Failed to fetch weather data');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const weatherData = await response.json();
@@ -202,6 +212,7 @@
                     throw new Error(weatherData.error);
                 }
 
+                // Update the UI
                 document.getElementById('temperature').textContent = 
                     `${weatherData.temperature || '--'}°F`;
                 document.getElementById('condition').textContent = 
@@ -213,9 +224,9 @@
                 
                 errorMessage.style.display = 'none';
             } catch (error) {
-                errorMessage.textContent = error.message || 'Error fetching weather data. Please try again.';
-                errorMessage.style.display = 'block';
                 console.error('Error:', error);
+                errorMessage.textContent = 'Unable to connect to the weather service. Please check your internet connection and try again.';
+                errorMessage.style.display = 'block';
             }
         }
 
