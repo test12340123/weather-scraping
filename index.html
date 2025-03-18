@@ -176,9 +176,28 @@
                 <p id="windSpeed">-- mph</p>
             </div>
             <div class="weather-item">
-                <h3>Weather Status</h3>
-                <p id="status">--</p>
+                <h3>Precipitation</h3>
+                <p id="precipitation">--%</p>
             </div>
+            <div class="weather-item">
+                <h3>Pollen Level</h3>
+                <p id="pollen">--</p>
+            </div>
+            <div class="weather-item">
+                <h3>Air Quality</h3>
+                <p id="airQuality">--</p>
+            </div>
+            <div class="weather-item">
+                <h3>UV Index</h3>
+                <p id="uvIndex">--</p>
+            </div>
+            <div class="weather-item">
+                <h3>Forecast</h3>
+                <p id="forecast">--</p>
+            </div>
+        </div>
+        <div id="lastUpdate" style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.8);">
+            Last Updated: --
         </div>
         <div id="weatherSource" style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.6);">
             Data from Weather Underground
@@ -221,6 +240,20 @@
                     `${weatherData.windSpeed || '--'} mph`;
                 document.getElementById('status').textContent = 
                     weatherData.condition || '--';
+                
+                // Update additional weather information
+                document.getElementById('precipitation').textContent = 
+                    weatherData.precipitation || '--%';
+                document.getElementById('pollen').textContent = 
+                    weatherData.pollen || '--';
+                document.getElementById('airQuality').textContent = 
+                    weatherData.airQuality || '--';
+                document.getElementById('uvIndex').textContent = 
+                    weatherData.uvIndex || '--';
+                document.getElementById('forecast').textContent = 
+                    weatherData.forecast || '--';
+                document.getElementById('lastUpdate').textContent = 
+                    `Last Updated: ${weatherData.updateTime || '--'}`;
                 
                 errorMessage.style.display = 'none';
             } catch (error) {
