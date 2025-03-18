@@ -210,7 +210,7 @@
             const errorMessage = document.getElementById('errorMessage');
             const API_URL = window.location.hostname === 'localhost' 
                 ? 'http://localhost:3000/api/weather'
-                : 'https://weather-scraping-alpha.vercel.app/api/weather'; // Replace with your actual deployed API URL
+                : 'https://weather-scraping-alpha.vercel.app/api/weather';
             
             try {
                 const response = await fetch(API_URL, {
@@ -231,31 +231,40 @@
                     throw new Error(weatherData.error);
                 }
 
-                // Update the UI
-                document.getElementById('temperature').textContent = 
-                    `${weatherData.temperature || '--'}°F`;
-                document.getElementById('condition').textContent = 
-                    weatherData.condition || '--';
-                document.getElementById('windSpeed').textContent = 
-                    `${weatherData.windSpeed || '--'} mph`;
-                document.getElementById('status').textContent = 
-                    weatherData.condition || '--';
-                
-                // Update additional weather information
-                document.getElementById('precipitation').textContent = 
-                    weatherData.precipitation || '--%';
-                document.getElementById('pollen').textContent = 
-                    weatherData.pollen || '--';
-                document.getElementById('airQuality').textContent = 
-                    weatherData.airQuality || '--';
-                document.getElementById('uvIndex').textContent = 
-                    weatherData.uvIndex || '--';
-                document.getElementById('forecast').textContent = 
-                    weatherData.forecast || '--';
-                document.getElementById('lastUpdate').textContent = 
-                    `Last Updated: ${weatherData.updateTime || '--'}`;
-                
-                errorMessage.style.display = 'none';
+                // Update all weather data elements
+                const updates = {
+                    'temperature': `${weatherData.temperature || '--'}°F`,
+                    'condition': weatherData.condition || '--',
+                    'windSpeed': `${weatherData.windSpeed || '--'} mph`,
+                    'precipitation': weatherData.precipitation || '--%',
+                    'pollen': weatherData.pollen || '--',
+                    'airQuality': weatherData.airQuality || '--',
+                    'uvIndex': weatherData.uvIndex || '--',
+                    'forecast': weatherData.forecast || '--'
+                };
+
+                // Update each element and check if update was successful
+                let updateSuccess = true;
+                for (const [id, value] of Object.entries(updates)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    } else {
+                        console.error(`Element with id '${id}' not found`);
+                        updateSuccess = false;
+                    }
+                }
+
+                // Update last update time
+                const lastUpdate = document.getElementById('lastUpdate');
+                if (lastUpdate) {
+                    lastUpdate.textContent = `Last Updated: ${weatherData.updateTime || '--'}`;
+                }
+
+                // Only hide error if update was successful
+                if (updateSuccess) {
+                    errorMessage.style.display = 'none';
+                }
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.textContent = 'Unable to connect to the weather service. Please check your internet connection and try again.';
