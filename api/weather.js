@@ -22,28 +22,46 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(data);
     
-    const temperature = $('.wu-value-to').first().text().trim();
-    const condition = $('.condition-icon').first().text().trim();
-    const windSpeed = $('.wind-speed').first().text().trim();
+    // Updated selectors and parsing logic
+    const tempCelsius = $('.wu-value-to').first().text().trim().replace('°C', '');
+    const temperature = tempCelsius ? Math.round((parseFloat(tempCelsius) * 9/5) + 32).toString() : "--";
     
-    // New data scraping
-    const precipitation = $('.precip').first().text().trim();
-    const pollen = $('.pollen-level').first().text().trim() || 'None';
-    const airQuality = $('.aqi-value').first().text().trim();
-    const uvIndex = $('.uv-index').first().text().trim();
-    const forecast = $('.forecast-link').first().text().trim();
-    const updateTime = $('.timestamp').first().text().trim();
+    const condition = $('.condition-icon, .condition-text').first().text().trim();
+    const windText = $('.wind-speed, .wind-text').first().text().trim();
+    const windSpeed = windText.match(/(\d+)\s*km\/h/)?.[1] || "--";
+    const windSpeedMph = windSpeed !== "--" ? Math.round(parseInt(windSpeed) * 0.621371).toString() : "--";
+    
+    // Improved data extraction
+    const precipitation = $('.precip, .precipitation-text').first().text().match(/(\d+)%/)?.[1] + "%" || "0%";
+    const pollen = $('.pollen-level, .pollen-text').first().text().trim() || 'None';
+    const airQuality = $('.aqi-value, .air-quality-text').first().text().trim() || 'Good';
+    const uvIndex = $('.uv-index, .uv-text').first().text().match(/UV\s*(\d+)/)?.[1] || 'Moderate';
+    
+    // Get forecast from the forecast section
+    const forecast = $('.forecast-link, .forecast-text').first().text().trim()
+      || $('.tomorrow-forecast').first().text().trim()
+      || "No forecast available";
+    
+    // Get update time
+    const updateTime = $('.timestamp, .update-time').first().text().trim()
+      || new Date().toLocaleString('en-US', { 
+          timeZone: 'America/Winnipeg',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+          timeZoneName: 'short'
+        });
     
     const weatherData = {
-      temperature: temperature || "--",
-      windSpeed: windSpeed ? windSpeed.match(/\d+/)?.[0] : "--",
-      condition: condition || "Unknown",
-      precipitation: precipitation || "0%",
-      pollen: pollen,
-      airQuality: airQuality || "Good",
-      uvIndex: uvIndex || "Moderate",
-      forecast: forecast || "No forecast available",
-      updateTime: updateTime || "Unknown",
+      temperature,
+      windSpeed: windSpeedMph,
+      condition,
+      precipitation,
+      pollen,
+      airQuality,
+      uvIndex,
+      forecast,
+      updateTime,
       source: "Weather Underground"
     };
     
