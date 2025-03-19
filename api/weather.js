@@ -21,16 +21,31 @@ app.get("/api/weather", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    
-    // Get all text content and specifically look for temperature with unit
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
-    const temperatureMatch = blockText.match(/(-?\d+°[FC])/);
+    
+    // Helper function to convert F to C
+    const fahrenheitToCelsius = (f) => Math.round((f - 32) * 5 / 9);
+    
+    // Extract data using regex
+    const currentTemp = blockText.match(/(\d+)\s*°F\s*like/);
+    const feelsLike = blockText.match(/like\s*(\d+)°/);
+    const condition = blockText.match(/(Cloudy|Clear|Rain|Snow|Partly cloudy|Mostly cloudy|Overcast)[^\d]*/i);
+    const windMatch = blockText.match(/N(\d+)\s*Gusts\s*(\d+)/);
+    const precipitation = blockText.match(/(\d+)%\s*Precip/);
+    const updateTime = blockText.match(/Updated\s*(.*?)\s*ago/);
     
     const weatherData = {
-      rawText: blockText,
-      temperature: temperatureMatch ? temperatureMatch[0] : '--',
-      timestamp: new Date().toLocaleTimeString(),
-      source: "Weather Underground"
+      temperature: currentTemp ? `${fahrenheitToCelsius(parseInt(currentTemp[1]))}°C` : '--',
+      feelsLike: feelsLike ? `${fahrenheitToCelsius(parseInt(feelsLike[1]))}°C` : '--',
+      condition: condition ? condition[1].trim() : 'Unknown',
+      windSpeed: windMatch ? `${windMatch[1]} km/h` : '--',
+      windGusts: windMatch ? `${windMatch[2]} km/h` : '--',
+      precipitation: precipitation ? `${precipitation[1]}%` : '0%',
+      pollen: blockText.includes('POLLEN') ? (blockText.match(/POLLEN\s*(.*?)\s*AIR/)?.[1] || 'None') : 'None',
+      airQuality: blockText.includes('AIR QUALITY') ? (blockText.match(/AIR QUALITY\s*(.*?)\s*Air/)?.[1] || 'Unknown') : 'Unknown',
+      uvIndex: blockText.includes('UV INDEX') ? (blockText.match(/UV INDEX\s*(.*?)$/m)?.[1] || 'Unknown') : 'Unknown',
+      lastUpdate: updateTime ? updateTime[1] : 'Unknown',
+      rawText: blockText // Keep for debugging
     };
     
     res.json(weatherData);
