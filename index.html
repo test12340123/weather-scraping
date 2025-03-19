@@ -233,14 +233,14 @@
 
                 // Update all weather data elements
                 const updates = {
-                    'temperature': `${weatherData.rawText.match(/(-?\d+°[FC])/)?.[0] || '--'}`, // Keep original unit
+                    'temperature': weatherData.temperature || '--',
                     'condition': weatherData.condition || '--',
-                    'windSpeed': `${weatherData.windSpeed || '--'} mph`,
-                    'precipitation': weatherData.precipitation || '--%',
+                    'windSpeed': weatherData.windSpeed || '--',
+                    'precipitation': weatherData.precipitation || '--',
                     'pollen': weatherData.pollen || '--',
                     'airQuality': weatherData.airQuality || '--',
                     'uvIndex': weatherData.uvIndex || '--',
-                    'forecast': weatherData.forecast || '--'
+                    'forecast': weatherData.condition || '--'  // Using condition as forecast
                 };
 
                 // Update each element and check if update was successful
@@ -258,7 +258,7 @@
                 // Update last update time
                 const lastUpdate = document.getElementById('lastUpdate');
                 if (lastUpdate) {
-                    lastUpdate.textContent = `Last Updated: ${weatherData.updateTime || '--'}`;
+                    lastUpdate.textContent = `Last Updated: ${weatherData.lastUpdate || '--'}`;
                 }
 
                 // Only hide error if update was successful
