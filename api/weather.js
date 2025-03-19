@@ -23,24 +23,40 @@ const scrapeWeatherData = async (retries = 3, delayMs = 2000) => {
         }
       });
 
-      // Wait for dynamic content to load
       await delay(delayMs);
       
       const $ = cheerio.load(data);
       
-      // Get temperature and validate
-      const tempText = $('.wu-value-to').first().text().trim();
-      const tempMatch = tempText.match(/-?\d+/);
-      const tempCelsius = tempMatch ? parseInt(tempMatch[0]) : null;
+      // Improved temperature scraping
+      let tempCelsius = null;
+      const tempElements = $('span:contains("°C")');
       
-      // Only proceed if we have valid temperature
-      if (!tempCelsius && attempt < retries) {
+      tempElements.each((i, el) => {
+        const text = $(el).text().trim();
+        const match = text.match(/-?\d+(?:\.\d+)?/);
+        if (match) {
+          const temp = parseFloat(match[0]);
+          // If we find a valid temperature within reasonable range (-50°C to 50°C)
+          if (!isNaN(temp) && temp >= -50 && temp <= 50) {
+            tempCelsius = temp;
+            return false; // Break the loop
+          }
+        }
+      });
+
+      // Validate temperature
+      if (tempCelsius === null && attempt < retries) {
         console.log(`Invalid temperature on attempt ${attempt}, retrying...`);
         continue;
       }
-      
-      const temperature = tempCelsius ? Math.round((tempCelsius * 9/5) + 32).toString() : "--";
-      const condition = $('.condition-icon').first().text().trim();
+
+      // Convert to Fahrenheit with validation
+      const temperature = tempCelsius !== null 
+        ? Math.round((tempCelsius * 9/5) + 32).toString()
+        : "--";
+
+      // Rest of the scraping logic
+      const condition = $('.condition-icon, .condition-text').first().text().trim();
       const windText = $('.wind-speed').first().text().trim();
       const windMatch = windText.match(/(\d+)\s*km\/h/);
       const windKmh = windMatch ? parseInt(windMatch[1]) : null;
