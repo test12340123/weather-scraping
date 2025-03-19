@@ -22,11 +22,13 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(data);
     
-    // Get all text content from the specific block
+    // Get all text content and specifically look for temperature with unit
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    const temperatureMatch = blockText.match(/(-?\d+°[FC])/);
     
     const weatherData = {
-      rawText: blockText, // Send the raw text content
+      rawText: blockText,
+      temperature: temperatureMatch ? temperatureMatch[0] : '--',
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };

@@ -165,7 +165,7 @@
         <div class="weather-grid">
             <div class="weather-item">
                 <h3>Temperature</h3>
-                <p id="temperature">--°F</p>
+                <p id="temperature">--°C</p>
             </div>
             <div class="weather-item">
                 <h3>Condition</h3>
@@ -233,7 +233,7 @@
 
                 // Update all weather data elements
                 const updates = {
-                    'temperature': `${weatherData.temperature || '--'}°F`,
+                    'temperature': `${weatherData.rawText.match(/(-?\d+°[FC])/)?.[0] || '--'}`, // Keep original unit
                     'condition': weatherData.condition || '--',
                     'windSpeed': `${weatherData.windSpeed || '--'} mph`,
                     'precipitation': weatherData.precipitation || '--%',
