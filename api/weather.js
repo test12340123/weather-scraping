@@ -21,41 +21,34 @@ app.get("/api/weather", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
     // Helper functions
     const fahrenheitToCelsius = (f) => Math.round((f - 32) * 5 / 9);
     const mphToKmh = (mph) => Math.round(mph * 1.60934);
     
-    // Extract data using regex
-    const currentTemp = blockText.match(/(\d+)\s*°F\s*like/);
-    const feelsLike = blockText.match(/like\s*(\d+)°/);
-    const condition = blockText.match(/(Cloudy|Clear|Rain|Snow|Partly cloudy|Mostly cloudy|Overcast)[^\d]*/i);
+    // Use CSS selectors for better accuracy
+    const currentTemp = $('.wu-value-to').first().text().trim();
+    const condition = $('.condition-icon').first().text().trim();
+    const windText = $('.wind-speed').first().text().trim();
+    const windDirection = windText.match(/([NEWS][NEWS]?)/)?.[1] || '';
+    const windSpeed = windText.match(/(\d+)/)?.[1] || '';
     
-    // Updated wind pattern to capture direction and speed
-    const windDirection = blockText.match(/\b([NEWS][NEWS]?)\d+/)?.[1] || '';
-    const windSpeed = blockText.match(/([NEWS][NEWS]?)(\d+)/)?.[2] || '';
-    const windGusts = blockText.match(/Gusts\s*(\d+)\s*°?mph/)?.[1] || '';
-    
-    const precipitation = blockText.match(/(\d+)%\s*Precip/);
-    const updateTime = blockText.match(/Updated\s*(.*?)\s*ago/);
-    
-    // Improved Air Quality and UV Index patterns
-    const airQuality = blockText.match(/AIR QUALITY\s*(Good|Moderate|Poor|Unknown)/i)?.[1] || 'Unknown';
-    const uvIndex = blockText.match(/UV INDEX\s*(Low|Moderate|High|Very High|Extreme)/i)?.[1] || 'Unknown';
+    const precipitation = $('.precip').first().text().trim();
+    const pollen = $('.pollen-level').first().text().trim() || 'None';
+    const airQuality = $('.aqi-value').first().text().trim();
+    const uvIndex = $('.uv-index').first().text().trim();
+    const updateTime = $('.timestamp').first().text().trim();
     
     const weatherData = {
-      temperature: currentTemp ? `${fahrenheitToCelsius(parseInt(currentTemp[1]))}°C` : '--',
-      feelsLike: feelsLike ? `${fahrenheitToCelsius(parseInt(feelsLike[1]))}°C` : '--',
-      condition: condition ? condition[1].trim() : 'Unknown',
+      temperature: currentTemp ? `${fahrenheitToCelsius(parseInt(currentTemp))}°C` : '--',
+      condition: condition || 'Unknown',
       windSpeed: windSpeed ? `${windDirection}${mphToKmh(parseInt(windSpeed))} km/h` : '--',
-      windGusts: windGusts ? `${mphToKmh(parseInt(windGusts))} km/h` : '--',
-      precipitation: precipitation ? `${precipitation[1]}%` : '0%',
-      pollen: 'None', // Static value as shown
-      airQuality: airQuality,
-      uvIndex: uvIndex,
-      lastUpdate: updateTime ? updateTime[1] : 'Unknown',
-      rawText: blockText // Keep for debugging
+      precipitation: precipitation || '0%',
+      pollen: pollen,
+      airQuality: airQuality || 'Good',
+      uvIndex: uvIndex || 'Moderate',
+      lastUpdate: updateTime || 'Unknown',
+      source: "Weather Underground"
     };
     
     res.json(weatherData);
