@@ -23,22 +23,35 @@ app.get("/api/weather", async (req, res) => {
     const $ = cheerio.load(data);
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
-    // Get forecast information by specific blocks
+    // Try different selector approaches for forecast
     const forecastBlocks = {
-      block1: $('.city-forecast div.small-12.medium-3:nth-of-type(1)').text().trim(),
-      block2: $('.city-forecast div.medium-3:nth-of-type(2)').text().trim(),
-      block3: $('.city-forecast div.medium-3:nth-of-type(3)').text().trim(),
-      block4: $('.city-forecast div.small-12:nth-of-type(4)').text().trim()
+      // Try direct class approach
+      byClass: $('.forecast-wrap').text().trim(),
+      // Try nested approach
+      nested: $('.region-content-main .forecast-wrap').text().trim(),
+      // Try alternative selectors
+      alt1: $('[class*="forecast"]').text().trim(),
+      alt2: $('.wu-forecast').text().trim(),
+      // Try getting individual days
+      days: $('.wu-forecast-item').map((i, el) => $(el).text().trim()).get(),
+      // Log element count
+      elementCount: $('.forecast-wrap').length,
+      // Try getting full HTML to inspect structure
+      pageStructure: $('body').html()
     };
     
-    const conditionsText = $('.city-conditions').text().trim();
-    const astronomyText = $('.city-astronomy').text().trim();
+    const conditionsText = $('.wu-current-conditions').text().trim();
+    const astronomyText = $('.astronomy').text().trim();
     
     res.json({ 
       sidebarText: blockText,
       forecastBlocks: forecastBlocks,
       conditionsText: conditionsText,
-      astronomyText: astronomyText
+      astronomyText: astronomyText,
+      debug: {
+        url: url,
+        status: 'completed'
+      }
     });
   } catch (error) {
     console.error('Weather API Error:', error.message);
