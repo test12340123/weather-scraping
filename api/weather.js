@@ -23,10 +23,6 @@ app.get("/api/weather", async (req, res) => {
     const $ = cheerio.load(data);
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
-    // Helper functions
-    const fahrenheitToCelsius = (f) => Math.round((f - 32) * 5 / 9);
-    const mphToKmh = (mph) => Math.round(mph * 1.60934);
-    
     // Extract data using regex
     const currentTemp = blockText.match(/(\d+)\s*°F\s*like/);
     const feelsLike = blockText.match(/like\s*(\d+)°/);
@@ -45,17 +41,17 @@ app.get("/api/weather", async (req, res) => {
     const uvIndex = blockText.match(/UV INDEX\s*(Low|Moderate|High|Very High|Extreme)/i)?.[1] || 'Unknown';
     
     const weatherData = {
-      temperature: currentTemp ? `${fahrenheitToCelsius(parseInt(currentTemp[1]))}°C` : '--',
-      feelsLike: feelsLike ? `${fahrenheitToCelsius(parseInt(feelsLike[1]))}°C` : '--',
+      temperature: currentTemp ? `${currentTemp[1]}°F` : '--',
+      feelsLike: feelsLike ? `${feelsLike[1]}°F` : '--',
       condition: condition ? condition[1].trim() : 'Unknown',
-      windSpeed: windSpeed ? `${windDirection}${mphToKmh(parseInt(windSpeed))} km/h` : '--',
-      windGusts: windGusts ? `${mphToKmh(parseInt(windGusts))} km/h` : '--',
+      windSpeed: windSpeed ? `${windDirection}${windSpeed} mph` : '--',
+      windGusts: windGusts ? `${windGusts} mph` : '--',
       precipitation: precipitation ? `${precipitation[1]}%` : '0%',
-      pollen: 'None', // Static value as shown
+      pollen: 'None',
       airQuality: airQuality,
       uvIndex: uvIndex,
       lastUpdate: updateTime ? updateTime[1] : 'Unknown',
-      rawText: blockText // Keep for debugging
+      rawText: blockText
     };
     
     res.json(weatherData);
