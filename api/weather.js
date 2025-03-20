@@ -21,38 +21,33 @@ app.get("/api/weather", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
-    // Try different selector approaches for forecast
-    const forecastBlocks = {
-      // Try direct class approach
-      byClass: $('.forecast-wrap').text().trim(),
-      // Try nested approach
-      nested: $('.region-content-main .forecast-wrap').text().trim(),
-      // Try alternative selectors
-      alt1: $('[class*="forecast"]').text().trim(),
-      alt2: $('.wu-forecast').text().trim(),
-      // Try getting individual days
-      days: $('.wu-forecast-item').map((i, el) => $(el).text().trim()).get(),
-      // Log element count
-      elementCount: $('.forecast-wrap').length,
-      // Try getting full HTML to inspect structure
-      pageStructure: $('body').html()
+    const temperature = $('.wu-value-to').first().text().trim();
+    const condition = $('.condition-icon').first().text().trim();
+    const windSpeed = $('.wind-speed').first().text().trim();
+    
+    // New data scraping
+    const precipitation = $('.precip').first().text().trim();
+    const pollen = $('.pollen-level').first().text().trim() || 'None';
+    const airQuality = $('.aqi-value').first().text().trim();
+    const uvIndex = $('.uv-index').first().text().trim();
+    const forecast = $('.forecast-link').first().text().trim();
+    const updateTime = $('.timestamp').first().text().trim();
+    
+    const weatherData = {
+      temperature: temperature || "--",
+      windSpeed: windSpeed ? windSpeed.match(/\d+/)?.[0] : "--",
+      condition: condition || "Unknown",
+      precipitation: precipitation || "0%",
+      pollen: pollen,
+      airQuality: airQuality || "Good",
+      uvIndex: uvIndex || "Moderate",
+      forecast: forecast || "No forecast available",
+      updateTime: updateTime || "Unknown",
+      source: "Weather Underground"
     };
     
-    const conditionsText = $('.wu-current-conditions').text().trim();
-    const astronomyText = $('.astronomy').text().trim();
-    
-    res.json({ 
-      sidebarText: blockText,
-      forecastBlocks: forecastBlocks,
-      conditionsText: conditionsText,
-      astronomyText: astronomyText,
-      debug: {
-        url: url,
-        status: 'completed'
-      }
-    });
+    res.json(weatherData);
   } catch (error) {
     console.error('Weather API Error:', error.message);
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
