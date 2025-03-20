@@ -48,11 +48,34 @@ app.get("/api/hourly", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    const hourlyForecast = $('#hourly-forecasts').text().trim();
+    const hourlyData = [];
     
-    res.json({ 
-      hourlyForecast: hourlyForecast
+    // Process each row in the hourly forecast table
+    $('#hourly-forecast-table tr').each((i, row) => {
+      if (i === 0) return; // Skip header row
+      
+      const time = $(row).find('.mat-column-timeHour').text().trim();
+      const temp = $(row).find('.mat-column-temperature .wu-value-to').text().trim();
+      const conditions = $(row).find('.mat-column-conditions .conditions').text().trim();
+      const feelsLike = $(row).find('.mat-column-feelsLike .wu-value-to').text().trim();
+      const precipitation = $(row).find('.mat-column-precipitation .wu-value-to').text().trim();
+      const humidity = $(row).find('.mat-column-humidity .wu-value-to').text().trim();
+      const wind = $(row).find('.mat-column-wind').text().trim();
+      
+      if (time) {
+        hourlyData.push({
+          time,
+          temperature: `${temp}°C`,
+          conditions,
+          feelsLike: `${feelsLike}°C`,
+          precipitation: `${precipitation}%`,
+          humidity: `${humidity}%`,
+          wind
+        });
+      }
     });
+    
+    res.json({ hourlyForecast: hourlyData });
   } catch (error) {
     console.error('Hourly Forecast API Error:', error.message);
     res.status(500).json({ error: "Failed to fetch Winnipeg hourly forecast data" });
