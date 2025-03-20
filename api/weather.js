@@ -22,8 +22,16 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(data);
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    const forecastText = $('.city-forecast:nth-of-type(n+3)').text().trim();
+    const conditionsText = $('.city-conditions').text().trim();
+    const astronomyText = $('.city-astronomy').text().trim();
     
-    res.json({ rawText: blockText });
+    res.json({ 
+      sidebarText: blockText,
+      forecastText: forecastText,
+      conditionsText: conditionsText,
+      astronomyText: astronomyText
+    });
   } catch (error) {
     console.error('Weather API Error:', error.message);
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
