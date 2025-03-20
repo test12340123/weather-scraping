@@ -23,18 +23,24 @@ app.get("/api/weather", async (req, res) => {
     const $ = cheerio.load(data);
     const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
-    // Get specific forecast and its HTML structure
-    const forecastElement = $('.city-forecast:nth-of-type(4)');
-    const forecastText = forecastElement.text().trim();
-    const forecastHtml = forecastElement.html();  // Get HTML structure for debugging
+    // Get detailed forecast information
+    const forecastEl = $('.city-forecast:nth-of-type(4)');
+    const forecastText = forecastEl.text().trim();
+    
+    // Get all child elements text for debugging
+    const forecastDetails = {
+      mainText: forecastText,
+      childElements: forecastEl.children().map((i, el) => $(el).text().trim()).get(),
+      htmlStructure: forecastEl.html(),
+      selector: '.city-forecast:nth-of-type(4)'
+    };
     
     const conditionsText = $('.city-conditions').text().trim();
     const astronomyText = $('.city-astronomy').text().trim();
     
     res.json({ 
       sidebarText: blockText,
-      forecastText: forecastText,
-      forecastHtml: forecastHtml, // Include HTML for debugging
+      forecast: forecastDetails,
       conditionsText: conditionsText,
       astronomyText: astronomyText
     });
