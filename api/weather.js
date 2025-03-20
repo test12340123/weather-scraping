@@ -22,19 +22,13 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(data);
     
-    // Scrape only the specific metrics
-    const precipitation = $('.precip').first().text().trim();
-    const pollen = $('.pollen-level').first().text().trim() || 'None';
-    const airQuality = $('.aqi-value').first().text().trim();
-    const uvIndex = $('.uv-index').first().text().trim();
-    const forecast = $('.forecast-link').first().text().trim();
+    // Get all text content from the specific block
+    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
     const weatherData = {
-      precipitation: precipitation || "0%",
-      pollen: pollen,
-      airQuality: airQuality || "Good",
-      uvIndex: uvIndex || "Moderate",
-      forecast: forecast || "No forecast available"
+      rawText: blockText, // Send the raw text content
+      timestamp: new Date().toLocaleTimeString(),
+      source: "Weather Underground"
     };
     
     res.json(weatherData);
