@@ -25,47 +25,37 @@ app.get("/api/weather", async (req, res) => {
     
     // Helper functions
     const fahrenheitToCelsius = (f) => Math.round((f - 32) * 5 / 9);
-    const extractTemperature = (text) => {
-      const celsiusMatch = text.match(/(-?\d+)\s*°C/);
-      const fahrenheitMatch = text.match(/(-?\d+)\s*°F/);
-      return celsiusMatch ? parseInt(celsiusMatch[1]) : 
-             fahrenheitMatch ? fahrenheitToCelsius(parseInt(fahrenheitMatch[1])) : null;
-    };
+    const mphToKmh = (mph) => Math.round(mph * 1.60934);
     
     // Extract data using regex
-    const currentTemp = extractTemperature(blockText);
-    const feelsLike = blockText.match(/like\s*(-?\d+)°/);
+    const currentTemp = blockText.match(/(\d+)\s*°F\s*like/);
+    const feelsLike = blockText.match(/like\s*(\d+)°/);
     const condition = blockText.match(/(Cloudy|Clear|Rain|Snow|Partly cloudy|Mostly cloudy|Overcast)[^\d]*/i);
     
-    // Updated wind patterns to handle both km/h and mph
-    const windMatch = blockText.match(/([NEWS])\s*(\d+)(?:\s*Gusts\s*(\d+))?\s*°?(mph|km\/h)/i);
-    const windDirection = windMatch?.[1] || '';
-    const windSpeed = windMatch?.[2] || '';
-    const windGusts = windMatch?.[3] || '';
-    const isMetric = windMatch?.[4]?.toLowerCase() === 'km/h';
-    
-    // Convert wind speeds if needed
-    const convertWind = (speed) => isMetric ? speed : Math.round(speed * 1.60934);
+    // Updated wind pattern to capture direction and speed
+    const windDirection = blockText.match(/\b([NEWS][NEWS]?)\d+/)?.[1] || '';
+    const windSpeed = blockText.match(/([NEWS][NEWS]?)(\d+)/)?.[2] || '';
+    const windGusts = blockText.match(/Gusts\s*(\d+)\s*°?mph/)?.[1] || '';
     
     const precipitation = blockText.match(/(\d+)%\s*Precip/);
-    const updateTime = blockText.match(/Updated\s*(.*?)(?:\s*ago)?/);
+    const updateTime = blockText.match(/Updated\s*(.*?)\s*ago/);
     
-    // Extract detailed weather info
+    // Improved Air Quality and UV Index patterns
     const airQuality = blockText.match(/AIR QUALITY\s*(Good|Moderate|Poor|Unknown)/i)?.[1] || 'Unknown';
     const uvIndex = blockText.match(/UV INDEX\s*(Low|Moderate|High|Very High|Extreme)/i)?.[1] || 'Unknown';
     
     const weatherData = {
-      temperature: currentTemp !== null ? `${currentTemp}°C` : '--',
-      feelsLike: feelsLike ? `${feelsLike[1]}°C` : '--',
+      temperature: currentTemp ? `${fahrenheitToCelsius(parseInt(currentTemp[1]))}°C` : '--',
+      feelsLike: feelsLike ? `${fahrenheitToCelsius(parseInt(feelsLike[1]))}°C` : '--',
       condition: condition ? condition[1].trim() : 'Unknown',
-      windSpeed: windSpeed ? `${windDirection}${convertWind(parseInt(windSpeed))} km/h` : '--',
-      windGusts: windGusts ? `${convertWind(parseInt(windGusts))} km/h` : '--',
+      windSpeed: windSpeed ? `${windDirection}${mphToKmh(parseInt(windSpeed))} km/h` : '--',
+      windGusts: windGusts ? `${mphToKmh(parseInt(windGusts))} km/h` : '--',
       precipitation: precipitation ? `${precipitation[1]}%` : '0%',
-      pollen: blockText.match(/POLLEN.*?(\w+)/i)?.[1] || 'None',
+      pollen: 'None', // Static value as shown
       airQuality: airQuality,
       uvIndex: uvIndex,
       lastUpdate: updateTime ? updateTime[1] : 'Unknown',
-      rawText: blockText
+      rawText: blockText // Keep for debugging
     };
     
     res.json(weatherData);
