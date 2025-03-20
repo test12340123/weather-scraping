@@ -38,6 +38,27 @@ app.get("/api/weather", async (req, res) => {
   }
 });
 
+app.get("/api/hourly", async (req, res) => {
+  try {
+    const url = "https://www.wunderground.com/hourly/ca/winnipeg";
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
+    const $ = cheerio.load(data);
+    const hourlyForecast = $('#hourly-forecasts').text().trim();
+    
+    res.json({ 
+      hourlyForecast: hourlyForecast
+    });
+  } catch (error) {
+    console.error('Hourly Forecast API Error:', error.message);
+    res.status(500).json({ error: "Failed to fetch Winnipeg hourly forecast data" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
