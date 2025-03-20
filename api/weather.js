@@ -21,33 +21,17 @@ app.get("/api/weather", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
+    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    const forecastText = $('.city-forecast:nth-of-type(n+3)').text().trim();
+    const conditionsText = $('.city-conditions').text().trim();
+    const astronomyText = $('.city-astronomy').text().trim();
     
-    const temperature = $('.wu-value-to').first().text().trim();
-    const condition = $('.condition-icon').first().text().trim();
-    const windSpeed = $('.wind-speed').first().text().trim();
-    
-    // New data scraping
-    const precipitation = $('.precip').first().text().trim();
-    const pollen = $('.pollen-level').first().text().trim() || 'None';
-    const airQuality = $('.aqi-value').first().text().trim();
-    const uvIndex = $('.uv-index').first().text().trim();
-    const forecast = $('.forecast-link').first().text().trim();
-    const updateTime = $('.timestamp').first().text().trim();
-    
-    const weatherData = {
-      temperature: temperature || "--",
-      windSpeed: windSpeed ? windSpeed.match(/\d+/)?.[0] : "--",
-      condition: condition || "Unknown",
-      precipitation: precipitation || "0%",
-      pollen: pollen,
-      airQuality: airQuality || "Good",
-      uvIndex: uvIndex || "Moderate",
-      forecast: forecast || "No forecast available",
-      updateTime: updateTime || "Unknown",
-      source: "Weather Underground"
-    };
-    
-    res.json(weatherData);
+    res.json({ 
+      sidebarText: blockText,
+      forecastText: forecastText,
+      conditionsText: conditionsText,
+      astronomyText: astronomyText
+    });
   } catch (error) {
     console.error('Weather API Error:', error.message);
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
