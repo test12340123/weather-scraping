@@ -47,18 +47,27 @@ async function getHourlyForecast() {
             waitUntil: 'networkidle0'
         });
 
-        // Wait for the table to be visible
-        await page.waitForSelector('.hourly-forecast-table', { timeout: 10000 });
-
-        // Get the table content
+        // Wait for and extract table content
+        await page.waitForSelector('#hourly-forecast-table', { timeout: 10000 });
+        
         const content = await page.evaluate(() => {
-            const table = document.querySelector('.hourly-forecast-table');
-            return table ? table.textContent : '';
+            const rows = Array.from(document.querySelectorAll('#hourly-forecast-table tr.mat-row'));
+            return rows.map(row => {
+                const cells = row.querySelectorAll('td');
+                return {
+                    time: cells[0].textContent.trim(),
+                    conditions: cells[1].querySelector('.conditions').textContent.trim(),
+                    temp: cells[2].querySelector('.wu-value').textContent.trim(),
+                    feelsLike: cells[3].querySelector('.wu-value').textContent.trim(),
+                    precip: cells[4].querySelector('.wu-value').textContent.trim(),
+                    cloudCover: cells[6].querySelector('.wu-value').textContent.trim(),
+                    humidity: cells[8].querySelector('.wu-value').textContent.trim(),
+                    wind: cells[9].textContent.trim()
+                };
+            }).map(entry => 
+                `${entry.time} | ${entry.conditions} | ${entry.temp}°C | Feels ${entry.feelsLike}°C | ${entry.precip}% precip | ${entry.cloudCover}% clouds | ${entry.humidity}% humidity | ${entry.wind}`
+            ).join('\n');
         });
-
-        if (!content) {
-            throw new Error('No table content found');
-        }
 
         return content;
     } catch (error) {
