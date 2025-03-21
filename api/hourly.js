@@ -6,7 +6,16 @@ const app = express();
 async function getHourlyForecast() {
     let browser;
     try {
-        browser = await puppeteer.launch({ headless: "new" });
+        browser = await puppeteer.launch({
+            headless: "new",
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--single-process'
+            ],
+            ignoreHTTPSErrors: true
+        });
         const page = await browser.newPage();
         await page.goto('https://www.wunderground.com/hourly/ca/winnipeg', {
             waitUntil: 'networkidle0'
