@@ -12,7 +12,8 @@
     "express": "^4.18.2",
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
-    "whatwg-mimetype": "^3.0.0"
+    "whatwg-mimetype": "^3.0.0",
+    "puppeteer-core": "^22.8.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
