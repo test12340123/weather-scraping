@@ -1,5 +1,8 @@
+const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
+
+const app = express();
 
 async function getHourlyForecast() {
     try {
@@ -7,29 +10,32 @@ async function getHourlyForecast() {
         const response = await axios.get(url);
         const $ = cheerio.load(response.data);
         
-        const hourlyData = [];
-        
-        $('#hourly-forecast-table tr.mat-row').each((i, element) => {
-            const row = $(element);
-            const hourlyEntry = {
-                time: row.find('td:nth-child(1)').text().trim(),
-                temperature: row.find('td:nth-child(2)').text().trim(),
-                feels: row.find('td:nth-child(3)').text().trim(),
-                precipitation: row.find('td:nth-child(4)').text().trim(),
-                cloudCover: row.find('td:nth-child(5)').text().trim(),
-                humidity: row.find('td:nth-child(6)').text().trim(),
-                wind: row.find('td:nth-child(7)').text().trim()
-            };
-            hourlyData.push(hourlyEntry);
-        });
-
-        return hourlyData;
+        return $('#hourly-forecast-table').text().trim();
     } catch (error) {
         console.error('Error fetching hourly forecast:', error);
         throw error;
     }
 }
 
-module.exports = {
-    getHourlyForecast
-};
+// Create API endpoint
+app.get('/api/hourly', async (req, res) => {
+    try {
+        const data = await getHourlyForecast();
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(data);
+    } catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.status(500).send(`Error: ${error.message}`);
+    }
+});
+
+// Export the server instead of just the function
+module.exports = app;
+
+// Start the server if running directly
+if (require.main === module) {
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+}
