@@ -22,8 +22,16 @@ app.get("/api/hourly", async (req, res) => {
     const $ = cheerio.load(data);
     const hourlyData = [];
 
-    // Select rows from the hourly forecast table
-    $('#hourly-forecast-table tr.mat-row').each((i, row) => {
+    // Debug: Log the structure of the table
+    const table = $('#hourly-forecast-table');
+    if (!table.length) {
+      console.error("Table not found. Logging HTML for debugging:");
+      console.log($.html());
+      return res.status(500).send("Error: Unable to locate the hourly forecast table.");
+    }
+
+    // Refine the selector for rows
+    $('#hourly-forecast-table tbody tr').each((i, row) => {
       const cells = $(row).find('td');
       if (cells.length > 0) {
         hourlyData.push([
@@ -40,7 +48,8 @@ app.get("/api/hourly", async (req, res) => {
     });
 
     if (hourlyData.length === 0) {
-      throw new Error("No hourly forecast data found. Check the selectors or the website structure.");
+      console.error("No data extracted. Check the selectors or the website structure.");
+      return res.status(500).send("Error: No hourly forecast data found.");
     }
 
     res.setHeader("Content-Type", "text/plain");
