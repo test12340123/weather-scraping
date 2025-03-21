@@ -22,10 +22,11 @@ app.get("/api/hourly", async (req, res) => {
     const $ = cheerio.load(data);
     const hourlyData = [];
     
-    // Debug: Log the structure of the table
-    const table = $('#hourly-forecast-table');
-    if (!table.length) {
-      console.error("Table not found. Check the selector or the website structure.");
+    // Debug: Log the structure of the table container
+    const tableContainer = $('#hourly-forecast-table').parent().html();
+    if (!tableContainer) {
+      console.error("Table container not found. Logging HTML for debugging:");
+      console.log($.html());
       return res.status(500).send("Error: Unable to locate the hourly forecast table.");
     }
 
