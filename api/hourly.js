@@ -20,13 +20,24 @@ app.get("/api/hourly", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    const timeText = $('tr:nth-of-type(1) .cdk-column-timeHour span.ng-star-inserted').text().trim();
+    const timeText = $('.cdk-column-timeHour').text().trim();
+    const tempText = $('.cdk-column-temperature').text().trim();
+    const conditionsText = $('.cdk-column-conditions').text().trim();
+    const precipText = $('.cdk-column-precipitation').text().trim();
+    const humidityText = $('.cdk-column-humidity').text().trim();
+    const windText = $('.cdk-column-wind').text().trim();
     
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(timeText);
+    res.json({ 
+      timeText,
+      tempText,
+      conditionsText,
+      precipText,
+      humidityText,
+      windText
+    });
   } catch (error) {
     console.error('Hourly Forecast API Error:', error.message);
-    res.status(500).send('Error: Failed to fetch time data');
+    res.status(500).json({ error: "Failed to fetch Winnipeg hourly forecast data" });
   }
 });
 
