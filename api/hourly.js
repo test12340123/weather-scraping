@@ -18,51 +18,21 @@ app.get("/api/hourly", async (req, res) => {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });
-
+    
     const $ = cheerio.load(data);
-    const hourlyData = [];
-
-    // Debug: Log the structure of the table
-    const table = $('#hourly-forecast-table');
-    if (!table.length) {
-      console.error("Table not found. Logging HTML for debugging:");
-      console.log($.html());
-      return res.status(500).send("Error: Unable to locate the hourly forecast table.");
-    }
-
-    // Refine the selector for rows
-    $('#hourly-forecast-table tbody tr').each((i, row) => {
-      const cells = $(row).find('td');
-      if (cells.length > 0) {
-        hourlyData.push([
-          $(cells[0]).text().trim(), // Time
-          $(cells[1]).find('.conditions').text().trim(), // Conditions
-          `${$(cells[2]).find('.wu-value').text().trim()}°C`, // Temperature
-          `Feels ${$(cells[3]).find('.wu-value').text().trim()}°C`, // Feels Like
-          `${$(cells[4]).find('.wu-value').text().trim()}% precip`, // Precipitation
-          `${$(cells[6]).find('.wu-value').text().trim()}% clouds`, // Cloud Cover
-          `${$(cells[8]).find('.wu-value').text().trim()}% humidity`, // Humidity
-          $(cells[9]).text().trim() // Wind
-        ].join(" | "));
-      }
-    });
-
-    if (hourlyData.length === 0) {
-      console.error("No data extracted. Check the selectors or the website structure.");
-      return res.status(500).send("Error: No hourly forecast data found.");
-    }
-
-    res.setHeader("Content-Type", "text/plain");
-    res.send(hourlyData.join("\n"));
+    const timeText = $('tr:nth-of-type(1) .cdk-column-timeHour span.ng-star-inserted').text().trim();
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(timeText);
   } catch (error) {
-    console.error("Hourly Weather API Error:", error.message);
-    res.status(500).send(`Error: ${error.message}`);
+    console.error('Hourly Forecast API Error:', error.message);
+    res.status(500).send('Error: Failed to fetch time data');
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Hourly forecast server running on port ${PORT}`);
 });
 
 module.exports = app;
