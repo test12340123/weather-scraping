@@ -1,16 +1,40 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
+
+function findChromePath() {
+    const paths = {
+        win32: [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            path.join(process.env.LOCALAPPDATA, 'Google\\Chrome\\Application\\chrome.exe'),
+        ],
+        linux: [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+        ],
+    };
+
+    const possiblePaths = paths[process.platform] || [];
+    return possiblePaths.find(path => fs.existsSync(path));
+}
 
 async function getHourlyForecast() {
     let browser;
     try {
+        const chromePath = findChromePath();
+        if (!chromePath) {
+            throw new Error('Chrome not found. Please install Chrome browser.');
+        }
+
         browser = await puppeteer.launch({
             headless: "new",
-            executablePath: process.platform === 'win32'
-                ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-                : '/usr/bin/google-chrome',
+            executablePath: chromePath,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
