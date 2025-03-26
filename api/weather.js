@@ -21,17 +21,17 @@ app.get("/api/weather", async (req, res) => {
     });
     
     const $ = cheerio.load(data);
-    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
-    const forecastText = $('.city-forecast:nth-of-type(n+3)').text().trim();
-    const conditionsText = $('.city-conditions').text().trim();
-    const astronomyText = $('.city-astronomy').text().trim();
     
-    res.json({ 
-      sidebarText: blockText,
-      forecastText: forecastText,
-      conditionsText: conditionsText,
-      astronomyText: astronomyText
-    });
+    // Get all text content from the specific block
+    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    
+    const weatherData = {
+      rawText: blockText, // Send the raw text content
+      timestamp: new Date().toLocaleTimeString(),
+      source: "Weather Underground"
+    };
+    
+    res.json(weatherData);
   } catch (error) {
     console.error('Weather API Error:', error.message);
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
