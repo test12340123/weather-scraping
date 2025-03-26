@@ -22,21 +22,12 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(data);
     
-    // Simple text scraping for testing
-    const temperature = $('body').text().match(/(-?\d+°)/)?.[0] || '--';
-    const condition = $('body').text().match(/(Clear|Cloudy|Rain|Snow|Sunny|Partly Cloudy)/i)?.[0] || 'Unknown';
-    const windSpeed = $('body').text().match(/(\d+)\s*mph/i)?.[0] || '--';
+    // Get all text content from the specific block
+    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     
     const weatherData = {
-      temperature,
-      condition,
-      windSpeed,
-      precipitation: "0%",
-      pollen: "Low",
-      airQuality: "Good",
-      uvIndex: "Low",
-      forecast: "Stable",
-      updateTime: new Date().toLocaleTimeString(),
+      rawText: blockText, // Send the raw text content
+      timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
     
