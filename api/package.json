@@ -4,9 +4,7 @@
   "main": "weather.js",
   "scripts": {
     "start": "node weather.js",
-    "dev": "nodemon weather.js",
-    "hourly": "node hourly.js",
-    "dev:hourly": "nodemon hourly.js"
+    "dev": "nodemon weather.js"
   },
   "dependencies": {
     "express": "^4.18.2",
