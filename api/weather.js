@@ -16,9 +16,9 @@ app.get("/api/weather", async (req, res) => {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
     const healthUrl = "https://www.wunderground.com/health/ca/winnipeg";
     const hourlyUrl = "https://www.wunderground.com/hourly/ca/winnipeg";
-    const accuWeatherUrl = "https://www.accuweather.com/en/ca/winnipeg/r3b/weather-forecast/48989";
+    const wpgWeatherUrl = "https://www.winnipegweather.com/";
     
-    const [weatherResponse, healthResponse, hourlyResponse, accuWeatherResponse] = await Promise.all([
+    const [weatherResponse, healthResponse, hourlyResponse, wpgWeatherResponse] = await Promise.all([
       axios.get(weatherUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -34,7 +34,7 @@ app.get("/api/weather", async (req, res) => {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
       }),
-      axios.get(accuWeatherUrl, {
+      axios.get(wpgWeatherUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -44,14 +44,14 @@ app.get("/api/weather", async (req, res) => {
     const weather$ = cheerio.load(weatherResponse.data);
     const health$ = cheerio.load(healthResponse.data);
     const hourly$ = cheerio.load(hourlyResponse.data);
-    const accuWeather$ = cheerio.load(accuWeatherResponse.data);
+    const wpgWeather$ = cheerio.load(wpgWeatherResponse.data);
     
     const blockText = weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     const airQualityText = health$('div.air-quality-index').text().trim();
     const pollenText = health$('div.pollen-section').text().trim();
     const uvText = weather$('#uvBarChart svg').text().trim();
     const hourlyText = hourly$('div.scrollable').text().trim();
-    const dailyForecastText = accuWeather$('div.daily-list').text().trim();
+    const ecForecastText = wpgWeather$('div.ECforecast').text().trim();
     
     const weatherData = {
       rawText: blockText,
@@ -59,9 +59,9 @@ app.get("/api/weather", async (req, res) => {
       pollen: pollenText,
       uvIndex: uvText,
       hourlyForecast: hourlyText,
-      dailyForecast: dailyForecastText,
+      ecForecast: ecForecastText,
       timestamp: new Date().toLocaleTimeString(),
-      source: "Weather Underground & AccuWeather"
+      source: "Weather Underground & Winnipeg Weather"
     };
     
     res.json(weatherData);
