@@ -13,20 +13,33 @@ app.use((req, res, next) => {
 
 app.get("/api/weather", async (req, res) => {
   try {
-    const url = "https://www.wunderground.com/weather/ca/winnipeg";
-    const { data } = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
+    const healthUrl = "https://www.wunderground.com/health/ca/winnipeg";
     
-    const $ = cheerio.load(data);
+    const [weatherResponse, healthResponse] = await Promise.all([
+      axios.get(weatherUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      }),
+      axios.get(healthUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      })
+    ]);
     
-    // Get all text content from the specific block
-    const blockText = $('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    const weather$ = cheerio.load(weatherResponse.data);
+    const health$ = cheerio.load(healthResponse.data);
+    
+    const blockText = weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    const airQualityText = health$('div.air-quality-index').text().trim();
+    const pollenText = health$('div.pollen-section').text().trim();
     
     const weatherData = {
-      rawText: blockText, // Send the raw text content
+      rawText: blockText,
+      airQuality: airQualityText,
+      pollen: pollenText,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
