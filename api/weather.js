@@ -31,23 +31,18 @@ app.get("/api/weather", async (req, res) => {
     
     const weather$ = cheerio.load(weatherResponse.data);
     const health$ = cheerio.load(healthResponse.data);
-    
-    // Updated weather selectors
-    const temperature = weather$('.wu-value-to').first().text().trim();
-    const condition = weather$('.condition-icon').text().trim();
-    const feelsLike = weather$('.feels-like').text().trim();
-    const humidity = weather$('[data-variable="humidity"] .wu-value').text().trim();
-    const wind = weather$('[data-variable="wind"] .wu-value').text().trim();
-    
+
+    let weatherText = '';
+    weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
+      weatherText += weather$(el).text().trim() + ' ';
+    });
+    weatherText = weatherText.trim();
+
     const airQualityText = health$('div.air-quality-index').text().trim();
     const pollenText = health$('div.pollen-section').text().trim();
-    
+
     const weatherData = {
-      temperature,
-      condition,
-      feelsLike,
-      humidity,
-      wind,
+      rawText: weatherText,
       airQuality: airQualityText,
       pollen: pollenText,
       timestamp: new Date().toLocaleTimeString(),
