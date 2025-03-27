@@ -15,9 +15,8 @@ app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
     const healthUrl = "https://www.wunderground.com/health/ca/winnipeg";
-    const googleUrl = "https://www.google.com/search?q=google+weather+winnipeg&rlz&safe=active&ssui=on";
     
-    const [weatherResponse, healthResponse, googleResponse] = await Promise.all([
+    const [weatherResponse, healthResponse] = await Promise.all([
       axios.get(weatherUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -27,30 +26,32 @@ app.get("/api/weather", async (req, res) => {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-      }),
-      axios.get(googleUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
       })
     ]);
     
     const weather$ = cheerio.load(weatherResponse.data);
     const health$ = cheerio.load(healthResponse.data);
-    const google$ = cheerio.load(googleResponse.data);
     
-    const blockText = weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
+    // Updated weather selectors
+    const temperature = weather$('.wu-value-to').first().text().trim();
+    const condition = weather$('.condition-icon').text().trim();
+    const feelsLike = weather$('.feels-like').text().trim();
+    const humidity = weather$('[data-variable="humidity"] .wu-value').text().trim();
+    const wind = weather$('[data-variable="wind"] .wu-value').text().trim();
+    
     const airQualityText = health$('div.air-quality-index').text().trim();
     const pollenText = health$('div.pollen-section').text().trim();
-    const googleWeather = google$('div.wob_dfc').text().trim();
     
     const weatherData = {
-      rawText: blockText,
+      temperature,
+      condition,
+      feelsLike,
+      humidity,
+      wind,
       airQuality: airQualityText,
       pollen: pollenText,
-      googleWeather: googleWeather,
       timestamp: new Date().toLocaleTimeString(),
-      source: "Weather Underground & Google"
+      source: "Weather Underground"
     };
     
     res.json(weatherData);
