@@ -16,8 +16,9 @@ app.get("/api/weather", async (req, res) => {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
     const healthUrl = "https://www.wunderground.com/health/ca/winnipeg";
     const hourlyUrl = "https://www.wunderground.com/hourly/ca/winnipeg";
+    const accuWeatherUrl = "https://www.accuweather.com/en/ca/winnipeg/r3b/weather-forecast/48989";
     
-    const [weatherResponse, healthResponse, hourlyResponse] = await Promise.all([
+    const [weatherResponse, healthResponse, hourlyResponse, accuWeatherResponse] = await Promise.all([
       axios.get(weatherUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -32,18 +33,25 @@ app.get("/api/weather", async (req, res) => {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
+      }),
+      axios.get(accuWeatherUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       })
     ]);
     
     const weather$ = cheerio.load(weatherResponse.data);
     const health$ = cheerio.load(healthResponse.data);
     const hourly$ = cheerio.load(hourlyResponse.data);
+    const accuWeather$ = cheerio.load(accuWeatherResponse.data);
     
     const blockText = weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     const airQualityText = health$('div.air-quality-index').text().trim();
     const pollenText = health$('div.pollen-section').text().trim();
     const uvText = weather$('#uvBarChart svg').text().trim();
     const hourlyText = hourly$('div.scrollable').text().trim();
+    const dailyForecastText = accuWeather$('div.daily-list').text().trim();
     
     const weatherData = {
       rawText: blockText,
@@ -51,8 +59,9 @@ app.get("/api/weather", async (req, res) => {
       pollen: pollenText,
       uvIndex: uvText,
       hourlyForecast: hourlyText,
+      dailyForecast: dailyForecastText,
       timestamp: new Date().toLocaleTimeString(),
-      source: "Weather Underground"
+      source: "Weather Underground & AccuWeather"
     };
     
     res.json(weatherData);
