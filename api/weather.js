@@ -35,11 +35,13 @@ app.get("/api/weather", async (req, res) => {
     const blockText = weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').text().trim();
     const airQualityText = health$('div.air-quality-index').text().trim();
     const pollenText = health$('div.pollen-section').text().trim();
+    const uvText = weather$('#uvBarChart svg').text().trim();
     
     const weatherData = {
       rawText: blockText,
       airQuality: airQualityText,
       pollen: pollenText,
+      uvIndex: uvText,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
