@@ -14,41 +14,44 @@ app.use((req, res, next) => {
 app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
-    const hourlyUrl = "https://www.wunderground.com/calendar/ca/winnipeg";
     
-    const [weatherResponse, hourlyResponse] = await Promise.all([
-      axios.get(weatherUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      }),
-      axios.get(hourlyUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      })
-    ]);
-    
-    const weather$ = cheerio.load(weatherResponse.data);
-    const hourly$ = cheerio.load(hourlyResponse.data);
-
-    let weatherText = '';
-    weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
-      weatherText += weather$(el).text().trim() + ' ';
+    const weatherResponse = await axios.get(weatherUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
     });
-    weatherText = weatherText.trim();
+    
+    const $ = cheerio.load(weatherResponse.data);
 
-    let hourlyText = '';
-    try {
-        hourlyText = hourly$('lib-city-calendar').text().trim();
-    } catch (error) {
-        console.error("Error scraping hourly forecast:", error);
-        hourlyText = "Error: Could not retrieve hourly forecast data.";
-    }
+    const currentConditions = {
+      timestamp: $('div:contains("access_time")').first().text().trim(),
+      temperature: {
+        current: $('div.temp').first().text().trim(),
+        feels_like: $('div:contains("like")').first().text().trim()
+      },
+      conditions: $('div:contains("Cloudy")').first().text().trim(),
+      wind: {
+        direction: $('div:contains("N")').first().text().trim(),
+        gusts: $('div:contains("Gusts")').first().text().trim()
+      }
+    };
+
+    const forecast = {
+      today: {
+        high: $('div:contains("High")').first().text().trim(),
+        precipitation: $('div:contains("Precip")').first().text().trim(),
+        description: $('div:contains("Cloudy skies")').first().text().trim()
+      },
+      tonight: {
+        low: $('div:contains("Low")').first().text().trim(),
+        precipitation: $('div:contains("Precip")').eq(1).text().trim(),
+        description: $('div:contains("Cloudy with snow")').first().text().trim()
+      }
+    };
 
     const weatherData = {
-      rawText: weatherText,
-      hourlyForecast: hourlyText,
+      current: currentConditions,
+      forecast: forecast,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
