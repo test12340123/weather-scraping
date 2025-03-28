@@ -39,7 +39,7 @@ app.get("/api/weather", async (req, res) => {
     weatherText = weatherText.trim();
 
     let hourlyText = '';
-    hourly$('div.scrollable').each((i, el) => {
+    hourly$('div#hourly-forecasts').each((i, el) => {
       hourlyText += hourly$(el).text().trim() + ' ';
     });
     hourlyText = hourlyText.trim();
