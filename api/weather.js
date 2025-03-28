@@ -39,14 +39,20 @@ app.get("/api/weather", async (req, res) => {
     weatherText = weatherText.trim();
 
     let hourlyText = '';
-    hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
-        let rowText = '';
-        hourly$(row).find('td').each((j, cell) => {
-            rowText += hourly$(cell).text().trim() + ' | ';
+    try {
+        hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
+            let rowText = '';
+            hourly$(row).find('td').each((j, cell) => {
+                const cellText = hourly$(cell).text().trim();
+                rowText += cellText + ' | ';
+            });
+            hourlyText += rowText.trim() + '\n';
         });
-        hourlyText += rowText.trim() + '\n';
-    });
-    hourlyText = hourlyText.trim();
+        hourlyText = hourlyText.trim();
+    } catch (error) {
+        console.error("Error scraping hourly forecast:", error);
+        hourlyText = "Error: Could not retrieve hourly forecast data.";
+    }
 
     const weatherData = {
       rawText: weatherText,
