@@ -30,16 +30,65 @@ app.get("/api/weather", async (req, res) => {
     });
     weatherText = weatherText.trim();
 
-    // Split the raw text into sections for easier reading
-    const sections = weatherText.split(/(?=Today|Tonight|Tomorrow)/);
-    
     const weatherData = {
       rawText: weatherText,
-      formatted: {
-        current: sections[0] || '',
-        today: sections.find(s => s.startsWith('Today')) || '',
-        tonight: sections.find(s => s.startsWith('Tonight')) || '',
-        tomorrow: sections.find(s => s.startsWith('Tomorrow')) || ''
+      structured: {
+        current: {
+          time: weatherText.match(/access_time (.*?) \|/)?.[1] || '',
+          temperature: {
+            current: weatherText.match(/(-?\d+)°\s*\|\s*(-?\d+)°/)?.[1] || '',
+            feels_like: weatherText.match(/like\s*(-?\d+)°/)?.[1] || '',
+            unit: '°C'
+          },
+          conditions: weatherText.match(/(?:Cloudy|Clear|Sunny|Rain|Snow)[^\n]*/)?.[0] || '',
+          wind: {
+            direction: weatherText.match(/[NEWS]\d+/)?.[0] || '',
+            gusts: weatherText.match(/Gusts\s*(\d+\s*km\/h)/)?.[1] || ''
+          }
+        },
+        forecast: {
+          today: {
+            date: weatherText.match(/Today\s*([\w\s]+\d{2}\/\d{2})/)?.[1] || '',
+            high: weatherText.match(/High\s*(-?\d+)\s*°C/)?.[1] || '',
+            precipitation: {
+              chance: weatherText.match(/(\d+)%\s*Precip/)?.[1] || '',
+              amount: weatherText.match(/Precip\.\s*\/\s*([\d.]+)/)?.[1] || '0'
+            },
+            description: weatherText.match(/(?:Today[^]*?)\.\s*([^]*?)\./)?.[1] || ''
+          },
+          tonight: {
+            low: weatherText.match(/Low\s*(-?\d+)\s*°C/)?.[1] || '',
+            precipitation: {
+              chance: weatherText.match(/Tonight[^]*?(\d+)%\s*Precip/)?.[1] || '',
+              amount: weatherText.match(/Tonight[^]*?Precip\.\s*\/\s*([\d.]+)/)?.[1] || '0'
+            },
+            description: weatherText.match(/Tonight[^]*?\.\s*([^]*?)\./)?.[1] || ''
+          },
+          tomorrow: {
+            date: weatherText.match(/Tomorrow\s*([\w\s]+\d{2}\/\d{2})/)?.[1] || '',
+            temperatures: weatherText.match(/Tomorrow[^]*?(-?\d+)\s*\|\s*(-?\d+)\s*°C/)?.[1] || '',
+            precipitation: {
+              chance: weatherText.match(/Tomorrow[^]*?(\d+)%\s*Precip/)?.[1] || '',
+              amount: weatherText.match(/Tomorrow[^]*?Precip\.\s*\/\s*([\d.]+)/)?.[1] || '0'
+            },
+            description: weatherText.match(/Tomorrow[^]*?\.\s*([^]*?)\./)?.[1] || ''
+          }
+        },
+        conditions: {
+          precipitation: {
+            chance: weatherText.match(/PRECIPITATION\s*(\d+)%/)?.[1] || '',
+            forecast: weatherText.match(/PRECIPITATION[^]*?(\d+[^]*?hours)/)?.[1] || ''
+          },
+          pollen: weatherText.match(/POLLEN\s*([^\n]+)/)?.[1] || '',
+          airQuality: {
+            status: weatherText.match(/AIR QUALITY\s*([^\n]+)/)?.[1] || '',
+            index: weatherText.match(/Air Quality Index\s*(\d+)/)?.[1] || ''
+          },
+          uv: {
+            level: weatherText.match(/UV INDEX\s*([^\n]+)/)?.[1] || '',
+            value: weatherText.match(/Daytime UV\s*(\d+)/)?.[1] || ''
+          }
+        }
       },
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
