@@ -23,18 +23,24 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(weatherResponse.data);
 
+    // Keep original scraping method for raw text
     let weatherText = '';
-    
-    // Get all text content from the main weather section
-    $('.region-content-main').find('*').each((i, el) => {
-      const text = $(el).text().trim();
-      if (text) {
-        weatherText += text + ' ';
-      }
+    $('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
+      weatherText += $(el).text().trim() + ' ';
     });
+    weatherText = weatherText.trim();
 
+    // Split the raw text into sections for easier reading
+    const sections = weatherText.split(/(?=Today|Tonight|Tomorrow)/);
+    
     const weatherData = {
-      rawText: weatherText.trim(),
+      rawText: weatherText,
+      formatted: {
+        current: sections[0] || '',
+        today: sections.find(s => s.startsWith('Today')) || '',
+        tonight: sections.find(s => s.startsWith('Tonight')) || '',
+        tomorrow: sections.find(s => s.startsWith('Tomorrow')) || ''
+      },
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
