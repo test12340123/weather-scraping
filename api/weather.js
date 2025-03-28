@@ -23,35 +23,18 @@ app.get("/api/weather", async (req, res) => {
     
     const $ = cheerio.load(weatherResponse.data);
 
-    const currentConditions = {
-      timestamp: $('div:contains("access_time")').first().text().trim(),
-      temperature: {
-        current: $('div.temp').first().text().trim(),
-        feels_like: $('div:contains("like")').first().text().trim()
-      },
-      conditions: $('div:contains("Cloudy")').first().text().trim(),
-      wind: {
-        direction: $('div:contains("N")').first().text().trim(),
-        gusts: $('div:contains("Gusts")').first().text().trim()
+    let weatherText = '';
+    
+    // Get all text content from the main weather section
+    $('.region-content-main').find('*').each((i, el) => {
+      const text = $(el).text().trim();
+      if (text) {
+        weatherText += text + ' ';
       }
-    };
-
-    const forecast = {
-      today: {
-        high: $('div:contains("High")').first().text().trim(),
-        precipitation: $('div:contains("Precip")').first().text().trim(),
-        description: $('div:contains("Cloudy skies")').first().text().trim()
-      },
-      tonight: {
-        low: $('div:contains("Low")').first().text().trim(),
-        precipitation: $('div:contains("Precip")').eq(1).text().trim(),
-        description: $('div:contains("Cloudy with snow")').first().text().trim()
-      }
-    };
+    });
 
     const weatherData = {
-      current: currentConditions,
-      forecast: forecast,
+      rawText: weatherText.trim(),
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
