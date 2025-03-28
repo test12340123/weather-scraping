@@ -1,61 +1,31 @@
-// Express.js server for web scraping API on Vercel
-const express = require("express");
-const axios = require("axios");
-const cheerio = require("cheerio");
-const app = express();
-
-// Add CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
-
 app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
     const hourlyUrl = "https://www.wunderground.com/hourly/ca/winnipeg";
     
-    const [weatherResponse, hourlyResponse] = await Promise.all([
-      axios.get(weatherUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      }),
-      axios.get(hourlyUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      })
-    ]);
+    const browser = await puppeteer.launch(); // Recommended over cheerio
+    const page = await browser.newPage();
     
-    const weather$ = cheerio.load(weatherResponse.data);
-    const hourly$ = cheerio.load(hourlyResponse.data);
-
-    let weatherText = '';
-    weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
-      weatherText += weather$(el).text().trim() + ' ';
+    // Set a more sophisticated user agent
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    // Navigate to the page and wait for content to load
+    await page.goto(hourlyUrl, { waitUntil: 'networkidle0' });
+    
+    // Wait for the specific selector that contains hourly forecast
+    await page.waitForSelector('.hourly-table', { timeout: 5000 });
+    
+    const hourlyText = await page.evaluate(() => {
+      const rows = document.querySelectorAll('.hourly-table tr');
+      return Array.from(rows).map(row => {
+        const cells = row.querySelectorAll('td');
+        return Array.from(cells).map(cell => cell.textContent.trim()).join(' | ');
+      }).join('\n');
     });
-    weatherText = weatherText.trim();
-
-    let hourlyText = '';
-    try {
-        hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
-            let rowText = '';
-            hourly$(row).find('td').each((j, cell) => {
-                const cellText = hourly$(cell).text().trim();
-                rowText += cellText + ' | ';
-            });
-            hourlyText += rowText.trim() + '\n';
-        });
-        hourlyText = hourlyText.trim();
-    } catch (error) {
-        console.error("Error scraping hourly forecast:", error);
-        hourlyText = "Error: Could not retrieve hourly forecast data.";
-    }
+    
+    await browser.close();
 
     const weatherData = {
-      rawText: weatherText,
       hourlyForecast: hourlyText,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
@@ -67,10 +37,3 @@ app.get("/api/weather", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
   }
 });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-module.exports = app;
