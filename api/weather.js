@@ -14,23 +14,14 @@ app.use((req, res, next) => {
 app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
-    const healthUrl = "https://www.wunderground.com/health/ca/winnipeg";
     
-    const [weatherResponse, healthResponse] = await Promise.all([
-      axios.get(weatherUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      }),
-      axios.get(healthUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      })
-    ]);
+    const weatherResponse = await axios.get(weatherUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
     
     const weather$ = cheerio.load(weatherResponse.data);
-    const health$ = cheerio.load(healthResponse.data);
 
     let weatherText = '';
     weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
@@ -38,13 +29,8 @@ app.get("/api/weather", async (req, res) => {
     });
     weatherText = weatherText.trim();
 
-    const airQualityText = health$('div.air-quality-index').text().trim();
-    const pollenText = health$('div.pollen-section').text().trim();
-
     const weatherData = {
       rawText: weatherText,
-      airQuality: airQualityText,
-      pollen: pollenText,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
