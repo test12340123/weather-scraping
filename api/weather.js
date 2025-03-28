@@ -40,18 +40,7 @@ app.get("/api/weather", async (req, res) => {
 
     let hourlyText = '';
     try {
-        hourly$('lib-city-calendar ul.calendar-days li.calendar-day').each((i, day) => {
-            const date = hourly$(day).find('div.date').text().trim();
-            const phrase = hourly$(day).find('div.phrase').text().trim();
-            const high = hourly$(day).find('div.temperature span.hi').text().trim();
-            const low = hourly$(day).find('div.temperature span.low').text().trim();
-            const precipitation = hourly$(day).find('div.precipitation lib-display-unit span.wu-value').text().trim();
-
-            if (date && phrase && high && low) {
-                hourlyText += `Date: ${date}, Phrase: ${phrase}, High: ${high}, Low: ${low}, Precipitation: ${precipitation || '0'}\n`;
-            }
-        });
-        hourlyText = hourlyText.trim();
+        hourlyText = hourly$('lib-city-calendar').text().trim();
     } catch (error) {
         console.error("Error scraping hourly forecast:", error);
         hourlyText = "Error: Could not retrieve hourly forecast data.";
