@@ -39,8 +39,12 @@ app.get("/api/weather", async (req, res) => {
     weatherText = weatherText.trim();
 
     let hourlyText = '';
-    hourly$('div#hourly-forecasts').each((i, el) => {
-      hourlyText += hourly$(el).text().trim() + ' ';
+    hourly$('div#hourly-forecasts div.row').each((i, el) => { // Select each row in the hourly forecasts
+        let rowText = '';
+        hourly$(el).find('div').each((j, cell) => { // Select each cell in the row
+            rowText += hourly$(cell).text().trim() + ' | '; // Append cell text with a separator
+        });
+        hourlyText += rowText.trim() + '\n'; // Append row text with a newline
     });
     hourlyText = hourlyText.trim();
 
