@@ -40,8 +40,14 @@ app.get("/api/weather", async (req, res) => {
 
     let hourlyText = '';
     try {
-        hourly$('.small-12.columns.has-sidebar').each((i, el) => {
-            hourlyText += hourly$(el).text().trim() + ' ';
+        hourly$('lib-city-calendar ul.calendar-days li.calendar-day').each((i, day) => {
+            const date = hourly$(day).find('div.date').text().trim();
+            const phrase = hourly$(day).find('div.phrase').text().trim();
+            const high = hourly$(day).find('span.hi').text().trim();
+            const low = hourly$(day).find('span.low').text().trim();
+            const precipitation = hourly$(day).find('lib-display-unit span.wu-value').text().trim();
+
+            hourlyText += `Date: ${date}, Phrase: ${phrase}, High: ${high}, Low: ${low}, Precipitation: ${precipitation}\n`;
         });
         hourlyText = hourlyText.trim();
     } catch (error) {
