@@ -113,6 +113,15 @@ app.get("/api/weather", async (req, res) => {
         hourlyForecastData = fallbackMessage + " (Structured Data)";
     }
 
+    // Check if all hourly data methods failed
+    const allMethodsFailed = 
+        hourlyText1.includes("No data available") &&
+        hourlyText2.includes("No data available") &&
+        hourlyText3.includes("No data available") &&
+        hourlyText4.includes("No data available") &&
+        hourlyText5.includes("No data available") &&
+        hourlyForecastData === "No structured data available.";
+
     const weatherData = {
       rawText: weatherText,
       hourlyForecast1: hourlyText1,
@@ -122,7 +131,8 @@ app.get("/api/weather", async (req, res) => {
       hourlyText5: hourlyText5,
       hourlyForecastData: hourlyForecastData,
       timestamp: new Date().toLocaleTimeString(),
-      source: "Weather Underground"
+      source: "Weather Underground",
+      message: allMethodsFailed ? "No hourly forecast data is currently available. Please try again later." : "Hourly forecast data retrieved successfully."
     };
     
     res.json(weatherData);
