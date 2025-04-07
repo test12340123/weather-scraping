@@ -38,44 +38,77 @@ app.get("/api/weather", async (req, res) => {
     });
     weatherText = weatherText.trim();
 
+    let hourlyText1 = '';
+    let hourlyText2 = '';
+    let hourlyText3 = '';
+    let hourlyText4 = '';
+    let hourlyText5 = '';
+
     let hourlyForecastData = [];
 
     try {
+        // Method 1: Direct text extraction
+        hourlyText1 = hourly$('.small-12.columns.scrollable').text().trim();
+
+        // Method 2: Iterate over children and concatenate text
+        hourly$('.small-12.columns.scrollable').children().each((i, el) => {
+            hourlyText2 += hourly$(el).text().trim() + ' ';
+        });
+        hourlyText2 = hourlyText2.trim();
+
+        // Method 3: Select all text nodes and join them
+        let textNodes = hourly$('.small-12.columns.scrollable').contents().filter(function() {
+            return this.nodeType === 3; // Text node
+        });
+        hourlyText3 = textNodes.map(function() {
+            return hourly$(this).text().trim();
+        }).get().join(' ');
+
+        // Method 4: Using .map() to extract text
+        hourlyText4 = hourly$('.small-12.columns.scrollable').children().map((i, el) => {
+            return hourly$(el).text().trim();
+        }).get().join(' ');
+
+        // Method 5: Using .each() to build an array of text
+        let hourlyTextArray = [];
+        hourly$('.small-12.columns.scrollable').children().each((i, el) => {
+            hourlyTextArray.push(hourly$(el).text().trim());
+        });
+        hourlyText5 = hourlyTextArray.join(' ');
+
+        // Extract structured hourly forecast data
         hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
-            const time = hourly$(row).find('.cdk-column-timeHour span:first-child').text().trim();
-            const conditions = hourly$(row).find('.cdk-column-conditions img').attr('alt');
-            const temperature = hourly$(row).find('.cdk-column-temperature .wu-value-to').text().trim();
-            const feelsLike = hourly$(row).find('.cdk-column-feelsLike .wu-value-to').text().trim();
-            const precipitation = hourly$(row).find('.cdk-column-precipitation .wu-value-to').text().trim();
-            const amount = hourly$(row).find('.cdk-column-liquidPrecipitation .wu-value-to').text().trim();
-            const cloudCover = hourly$(row).find('.cdk-column-cloudCover .wu-value-to').text().trim();
-            const dewPoint = hourly$(row).find('.cdk-column-dewPoint .wu-value-to').text().trim();
-            const humidity = hourly$(row).find('.cdk-column-humidity .wu-value-to').text().trim();
-            const wind = hourly$(row).find('.cdk-column-wind .wu-value-to').text().trim();
-            const pressure = hourly$(row).find('.cdk-column-pressure .wu-value-to').text().trim();
+            const time = hourly$(row).find('.time').text().trim();
+            const temperature = hourly$(row).find('.temperature').text().trim();
+            const description = hourly$(row).find('.description').text().trim();
+            const precipitation = hourly$(row).find('.precipitation').text().trim();
 
             hourlyForecastData.push({
                 time: time,
-                conditions: conditions,
                 temperature: temperature,
-                feelsLike: feelsLike,
-                precipitation: precipitation,
-                amount: amount,
-                cloudCover: cloudCover,
-                dewPoint: dewPoint,
-                humidity: humidity,
-                wind: wind,
-                pressure: pressure
+                description: description,
+                precipitation: precipitation
             });
         });
 
+
     } catch (error) {
         console.error("Error scraping hourly forecast:", error);
+        hourlyText1 = "Error: Could not retrieve hourly forecast data (Method 1).";
+        hourlyText2 = "Error: Could not retrieve hourly forecast data (Method 2).";
+        hourlyText3 = "Error: Could not retrieve hourly forecast data (Method 3).";
+        hourlyText4 = "Error: Could not retrieve hourly forecast data (Method 4).";
+        hourlyText5 = "Error: Could not retrieve hourly forecast data (Method 5).";
         hourlyForecastData = "Error: Could not retrieve hourly forecast data (Structured Data).";
     }
 
     const weatherData = {
       rawText: weatherText,
+      hourlyForecast1: hourlyText1,
+      hourlyForecast2: hourlyText2,
+      hourlyForecast3: hourlyText3,
+      hourlyText4: hourlyText4,
+      hourlyText5: hourlyText5,
       hourlyForecastData: hourlyForecastData,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
