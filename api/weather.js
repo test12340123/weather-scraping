@@ -40,16 +40,12 @@ app.get("/api/weather", async (req, res) => {
 
     let hourlyText = '';
     try {
-      // Method 1: Attempt to extract data using a more specific selector
-      hourlyText = extractHourlyForecast(hourly$);
-      if (!hourlyText) {
-        // Method 2: If the first method fails, try a different selector
-        hourlyText = extractHourlyForecastAlternative(hourly$);
-      }
-      if (!hourlyText) {
-        // Method 3: If the second method fails, try a simpler selector
-        hourlyText = extractHourlyForecastSimple(hourly$);
-      }
+      let hourlyForecast1 = extractHourlyForecast(hourly$);
+      let hourlyForecast2 = extractHourlyForecastAlternative(hourly$);
+      let hourlyForecast3 = extractHourlyForecastSimple(hourly$);
+
+      hourlyText = [hourlyForecast1, hourlyForecast2, hourlyForecast3].filter(Boolean).join(' ');
+
       if (!hourlyText) {
         hourlyText = "Error: Could not retrieve hourly forecast data.";
       }
