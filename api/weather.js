@@ -14,7 +14,7 @@ app.use((req, res, next) => {
 app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
-    const hourlyUrl = "https://www.wunderground.com/calendar/ca/winnipeg";
+    const hourlyUrl = "https://www.wunderground.com/hourly/ca/winnipeg";
     
     const [weatherResponse, hourlyResponse] = await Promise.all([
       axios.get(weatherUrl, {
