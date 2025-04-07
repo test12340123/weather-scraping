@@ -153,3 +153,5 @@ app.get("/api/weather", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+module.exports = app; // Ensure the app is exported
