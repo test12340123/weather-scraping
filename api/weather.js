@@ -42,6 +42,8 @@ app.get("/api/weather", async (req, res) => {
     let hourlyText2 = '';
     let hourlyText3 = '';
 
+    let hourlyForecastData = [];
+
     try {
         // Method 1: Direct text extraction
         hourlyText1 = hourly$('.small-12.columns.scrollable').text().trim();
@@ -60,12 +62,28 @@ app.get("/api/weather", async (req, res) => {
             return hourly$(this).text().trim();
         }).get().join(' ');
 
+        // Extract structured hourly forecast data
+        hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
+            const time = hourly$(row).find('.time').text().trim();
+            const temperature = hourly$(row).find('.temperature').text().trim();
+            const description = hourly$(row).find('.description').text().trim();
+            const precipitation = hourly$(row).find('.precipitation').text().trim();
+
+            hourlyForecastData.push({
+                time: time,
+                temperature: temperature,
+                description: description,
+                precipitation: precipitation
+            });
+        });
+
 
     } catch (error) {
         console.error("Error scraping hourly forecast:", error);
         hourlyText1 = "Error: Could not retrieve hourly forecast data (Method 1).";
         hourlyText2 = "Error: Could not retrieve hourly forecast data (Method 2).";
         hourlyText3 = "Error: Could not retrieve hourly forecast data (Method 3).";
+        hourlyForecastData = "Error: Could not retrieve hourly forecast data (Structured Data).";
     }
 
     const weatherData = {
@@ -73,6 +91,7 @@ app.get("/api/weather", async (req, res) => {
       hourlyForecast1: hourlyText1,
       hourlyForecast2: hourlyText2,
       hourlyForecast3: hourlyText3,
+      hourlyForecastData: hourlyForecastData,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
