@@ -38,28 +38,41 @@ app.get("/api/weather", async (req, res) => {
     });
     weatherText = weatherText.trim();
 
-    let hourlyText = '';
+    let hourlyText1 = '';
+    let hourlyText2 = '';
+    let hourlyText3 = '';
+
     try {
-      let hourlyForecast1 = extractHourlyForecast(hourly$);
-      let hourlyForecast2 = extractHourlyForecastAlternative(hourly$);
-      let hourlyForecast3 = extractHourlyForecastSimple(hourly$);
+        // Method 1: Direct text extraction
+        hourlyText1 = hourly$('.small-12.columns.scrollable').text().trim();
 
-      hourlyText = [hourlyForecast1, hourlyForecast2, hourlyForecast3].filter(Boolean).join(' ');
+        // Method 2: Iterate over children and concatenate text
+        hourly$('.small-12.columns.scrollable').children().each((i, el) => {
+            hourlyText2 += hourly$(el).text().trim() + ' ';
+        });
+        hourlyText2 = hourlyText2.trim();
 
-      if (!hourlyText) {
-        hourlyText = "Error: Could not retrieve hourly forecast data.";
-      }
+        // Method 3: Select all text nodes and join them
+        let textNodes = hourly$('.small-12.columns.scrollable').contents().filter(function() {
+            return this.nodeType === 3; // Text node
+        });
+        hourlyText3 = textNodes.map(function() {
+            return hourly$(this).text().trim();
+        }).get().join(' ');
+
+
     } catch (error) {
-      console.error("Error scraping hourly forecast:", error);
-      hourlyText = "Error: Could not retrieve hourly forecast data.";
+        console.error("Error scraping hourly forecast:", error);
+        hourlyText1 = "Error: Could not retrieve hourly forecast data (Method 1).";
+        hourlyText2 = "Error: Could not retrieve hourly forecast data (Method 2).";
+        hourlyText3 = "Error: Could not retrieve hourly forecast data (Method 3).";
     }
-
-    // Clean up the extracted text
-    hourlyText = hourlyText.replace(/\s+/g, ' ').trim();
 
     const weatherData = {
       rawText: weatherText,
-      hourlyForecast: hourlyText,
+      hourlyForecast1: hourlyText1,
+      hourlyForecast2: hourlyText2,
+      hourlyForecast3: hourlyText3,
       timestamp: new Date().toLocaleTimeString(),
       source: "Weather Underground"
     };
@@ -70,46 +83,6 @@ app.get("/api/weather", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
   }
 });
-
-// Helper function to extract hourly forecast data using a specific selector
-function extractHourlyForecast(hourly$) {
-  try {
-    let text = '';
-    hourly$('table.calendar-table tbody tr').each((i, row) => {
-      hourly$(row).find('td').each((j, cell) => {
-        text += hourly$(cell).text().trim() + ' ';
-      });
-    });
-    return text.trim();
-  } catch (error) {
-    console.error("Error in extractHourlyForecast:", error);
-    return '';
-  }
-}
-
-// Helper function to extract hourly forecast data using an alternative selector
-function extractHourlyForecastAlternative(hourly$) {
-  try {
-    let text = '';
-    hourly$('.day-content').each((i, el) => {
-      text += hourly$(el).text().trim() + ' ';
-    });
-    return text.trim();
-  } catch (error) {
-    console.error("Error in extractHourlyForecastAlternative:", error);
-    return '';
-  }
-}
-
-// Helper function to extract hourly forecast data using a simpler selector
-function extractHourlyForecastSimple(hourly$) {
-  try {
-    return hourly$('lib-city-calendar').text().trim();
-  } catch (error) {
-    console.error("Error in extractHourlyForecastSimple:", error);
-    return '';
-  }
-}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
