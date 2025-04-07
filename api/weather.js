@@ -49,12 +49,14 @@ app.get("/api/weather", async (req, res) => {
     try {
         // Method 1: Direct text extraction
         hourlyText1 = hourly$('.small-12.columns.scrollable').text().trim();
+        if (!hourlyText1) hourlyText1 = "No data available (Method 1).";
 
         // Method 2: Iterate over children and concatenate text
         hourly$('.small-12.columns.scrollable').children().each((i, el) => {
             hourlyText2 += hourly$(el).text().trim() + ' ';
         });
         hourlyText2 = hourlyText2.trim();
+        if (!hourlyText2) hourlyText2 = "No data available (Method 2).";
 
         // Method 3: Select all text nodes and join them
         let textNodes = hourly$('.small-12.columns.scrollable').contents().filter(function() {
@@ -63,11 +65,13 @@ app.get("/api/weather", async (req, res) => {
         hourlyText3 = textNodes.map(function() {
             return hourly$(this).text().trim();
         }).get().join(' ');
+        if (!hourlyText3) hourlyText3 = "No data available (Method 3).";
 
         // Method 4: Using .map() to extract text
         hourlyText4 = hourly$('.small-12.columns.scrollable').children().map((i, el) => {
             return hourly$(el).text().trim();
         }).get().join(' ');
+        if (!hourlyText4) hourlyText4 = "No data available (Method 4).";
 
         // Method 5: Using .each() to build an array of text
         let hourlyTextArray = [];
@@ -75,6 +79,7 @@ app.get("/api/weather", async (req, res) => {
             hourlyTextArray.push(hourly$(el).text().trim());
         });
         hourlyText5 = hourlyTextArray.join(' ');
+        if (!hourlyText5) hourlyText5 = "No data available (Method 5).";
 
         // Extract structured hourly forecast data
         hourly$('#hourly-forecast-table tbody tr').each((i, row) => {
@@ -83,14 +88,19 @@ app.get("/api/weather", async (req, res) => {
             const description = hourly$(row).find('.description').text().trim();
             const precipitation = hourly$(row).find('.precipitation').text().trim();
 
-            hourlyForecastData.push({
-                time: time,
-                temperature: temperature,
-                description: description,
-                precipitation: precipitation
-            });
+            if (time || temperature || description || precipitation) {
+                hourlyForecastData.push({
+                    time: time || "N/A",
+                    temperature: temperature || "N/A",
+                    description: description || "N/A",
+                    precipitation: precipitation || "N/A"
+                });
+            }
         });
 
+        if (hourlyForecastData.length === 0) {
+            hourlyForecastData = "No structured data available.";
+        }
 
     } catch (error) {
         console.error("Error scraping hourly forecast:", error);
