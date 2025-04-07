@@ -94,12 +94,13 @@ app.get("/api/weather", async (req, res) => {
 
     } catch (error) {
         console.error("Error scraping hourly forecast:", error);
-        hourlyText1 = "Error: Could not retrieve hourly forecast data (Method 1).";
-        hourlyText2 = "Error: Could not retrieve hourly forecast data (Method 2).";
-        hourlyText3 = "Error: Could not retrieve hourly forecast data (Method 3).";
-        hourlyText4 = "Error: Could not retrieve hourly forecast data (Method 4).";
-        hourlyText5 = "Error: Could not retrieve hourly forecast data (Method 5).";
-        hourlyForecastData = "Error: Could not retrieve hourly forecast data (Structured Data).";
+        const fallbackMessage = "Error: Could not retrieve hourly forecast data.";
+        hourlyText1 = fallbackMessage + " (Method 1)";
+        hourlyText2 = fallbackMessage + " (Method 2)";
+        hourlyText3 = fallbackMessage + " (Method 3)";
+        hourlyText4 = fallbackMessage + " (Method 4)";
+        hourlyText5 = fallbackMessage + " (Method 5)";
+        hourlyForecastData = fallbackMessage + " (Structured Data)";
     }
 
     const weatherData = {
