@@ -1,3 +1,4 @@
+// Express.js server for web scraping API on Vercel
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
@@ -10,80 +11,55 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/api/fruits", async (req, res) => {
-  try {
-    // First, get the list of all fruits
-    const mainUrl = "https://blox-fruits.fandom.com/wiki/Blox_Fruits";
-    const mainResponse = await axios.get(mainUrl);
-    const main$ = cheerio.load(mainResponse.data);
-    
-    // Get all fruit names from the itemList div
-    const fruitNames = [];
-    main$('#itemList').find('a').each((i, el) => {
-      const fruitName = main$(el).text().trim();
-      if (fruitName) fruitNames.push(fruitName);
-    });
-
-    // Scrape details for each fruit
-    const fruitsData = [];
-    for (const fruitName of fruitNames) {
-      try {
-        const fruitUrl = `https://blox-fruits.fandom.com/wiki/${fruitName}`;
-        const fruitResponse = await axios.get(fruitUrl);
-        const fruit$ = cheerio.load(fruitResponse.data);
-
-        const fruitData = {
-          name: fruit$('h2.pi-title').text().trim(),
-          rarity: fruit$('td[data-source="rarity"]').text().trim(),
-          moneyCost: fruit$('td[data-source="money"]').text().trim(),
-          robuxCost: fruit$('td[data-source="robux"]').text().trim(),
-          url: fruitUrl
-        };
-
-        fruitsData.push(fruitData);
-        
-        // Add a small delay to avoid overwhelming the server
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error(`Error scraping ${fruitName}:`, error.message);
-      }
-    }
-
-    res.json({
-      fruits: fruitsData,
-      timestamp: new Date().toISOString(),
-      total: fruitsData.length
-    });
-
-  } catch (error) {
-    console.error('Scraping Error:', error.message);
-    res.status(500).json({ error: "Failed to fetch Blox Fruits data" });
-  }
-});
-
-// Add back the weather endpoint
 app.get("/api/weather", async (req, res) => {
   try {
     const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
-    const response = await axios.get(weatherUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    const hourlyUrl = "https://www.wunderground.com/calendar/ca/winnipeg";
     
-    const $ = cheerio.load(response.data);
-    let weatherText = '';
-    $('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
-      weatherText += $(el).text().trim() + ' ';
-    });
+    const [weatherResponse, hourlyResponse] = await Promise.all([
+      axios.get(weatherUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      }),
+      axios.get(hourlyUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      })
+    ]);
+    
+    const weather$ = cheerio.load(weatherResponse.data);
+    const hourly$ = cheerio.load(hourlyResponse.data);
 
-    res.json({
-      weather: weatherText.trim(),
-      timestamp: new Date().toISOString(),
+    let weatherText = '';
+    weather$('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
+      weatherText += weather$(el).text().trim() + ' ';
     });
+    weatherText = weatherText.trim();
+
+    let hourlyText = '';
+    try {
+        hourly$('.small-12.columns.scrollable').children().each((i, el) => {
+            hourlyText += hourly$(el).text().trim() + ' ';
+        });
+        hourlyText = hourlyText.trim();
+    } catch (error) {
+        console.error("Error scraping hourly forecast:", error);
+        hourlyText = "Error: Could not retrieve hourly forecast data.";
+    }
+
+    const weatherData = {
+      rawText: weatherText,
+      hourlyForecast: hourlyText,
+      timestamp: new Date().toLocaleTimeString(),
+      source: "Weather Underground"
+    };
+    
+    res.json(weatherData);
   } catch (error) {
     console.error('Weather API Error:', error.message);
-    res.status(500).json({ error: "Failed to fetch weather data" });
+    res.status(500).json({ error: "Failed to fetch Winnipeg weather data" });
   }
 });
 
