@@ -61,6 +61,32 @@ app.get("/api/fruits", async (req, res) => {
   }
 });
 
+// Add back the weather endpoint
+app.get("/api/weather", async (req, res) => {
+  try {
+    const weatherUrl = "https://www.wunderground.com/weather/ca/winnipeg";
+    const response = await axios.get(weatherUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
+    const $ = cheerio.load(response.data);
+    let weatherText = '';
+    $('.region-content-main div:nth-of-type(1) div.has-sidebar').children().each((i, el) => {
+      weatherText += $(el).text().trim() + ' ';
+    });
+
+    res.json({
+      weather: weatherText.trim(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Weather API Error:', error.message);
+    res.status(500).json({ error: "Failed to fetch weather data" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
