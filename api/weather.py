@@ -54,7 +54,7 @@ def parse_calendar_day(day_element) -> WeatherData:
         type=type
     )
 
-@app.get("/api/weather/calendar", response_model=List[WeatherData])
+@app.get("/api/weather", response_model=List[WeatherData])
 async def get_calendar_weather():
     url = "https://www.wunderground.com/calendar/ca/winnipeg"
     try:
